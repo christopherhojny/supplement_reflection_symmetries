@@ -1,0 +1,10 @@
+propagating/symmetry/maxgenerators = 0
+limits/gap = 0.001
+misc/usesymmetry = 3
+propagating/symmetry/symtype = 1
+propagating/symmetry/detectdoublelex = TRUE
+propagating/symmetry/detectorbitopes = TRUE
+propagating/symmetry/detectsubgroups = FALSE
+propagating/symmetry/handlesignedorbitopes = TRUE
+propagating/symmetry/usesimplesgncomp = FALSE
+propagating/symmetry/usedynamicprop = TRUE

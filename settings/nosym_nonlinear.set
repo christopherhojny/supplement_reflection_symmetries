@@ -1,0 +1,3 @@
+propagating/symmetry/maxgenerators = 0
+limits/gap = 0.001
+misc/usesymmetry = 0

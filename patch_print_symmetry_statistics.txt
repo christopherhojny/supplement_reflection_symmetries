@@ -1,0 +1,121 @@
+diff --git a/src/scip/prop_symmetry.c b/src/scip/prop_symmetry.c
+index 1c6705666d..03afc23677 100644
+--- a/src/scip/prop_symmetry.c
++++ b/src/scip/prop_symmetry.c
+@@ -1155,6 +1155,7 @@ SCIP_RETCODE setSymmetryData(
+    SCIP_Bool*            compressed          /**< pointer to store whether compression has been performed */
+    )
+ {
++   int nsignedperms = 0;
+    SCIP_Real ub;
+    SCIP_Real lb;
+    int i;
+@@ -1307,11 +1308,13 @@ SCIP_RETCODE setSymmetryData(
+             if ( perms[p][i] >= *npermvars )
+             {
+                (*isproperperm)[p] = FALSE;
++               ++nsignedperms;
+                break;
+             }
+          }
+       }
+    }
++   printf("SYMMETRY stats perms %d signedperms %d\n", nperms - nsignedperms, nsignedperms);
+ 
+    return SCIP_OKAY;
+ }
+@@ -5861,6 +5864,7 @@ SCIP_RETCODE tryAddOrbitalRedLexRed(
+             SCIPfreeBufferArray(scip, &vars);
+ 
+             propdata->componentblocked[cidx] |= SYM_HANDLETYPE_SYMBREAK;
++            printf("SYMMETRY component %d simplecut\n", cidx);
+          }
+       }
+    }
+@@ -6263,6 +6267,9 @@ SCIP_RETCODE handleDoubleLexOrbitope(
+       nelem = nrows * ncols;
+       SCIP_CALL( SCIPallocBufferArray(scip, &orbitopevarmatrix, nelem) );
+ 
++      printf("SYMMETRY component %d doublelexorbitope rows %d columns %d signedrows %d\n",
++         componentid, nrows, ncols, nsignedrows);
++
+       /* compute number of constraints to handle signed part of the orbitope */
+       nsignedconss = 0;
+       nsortconss = ncols - 1;
+@@ -6455,6 +6462,8 @@ SCIP_RETCODE handleDoubleLexOrbitope(
+       if ( propdata->usedynamicprop )
+       {
+          SCIP_CALL( addOrbitopesDynamic(scip, propdata, componentid, partialname, varidxmatrix, nrows, ncols, success) );
++         printf("SYMMETRY component %d orbitope dynamic rows %d columns %d\n",
++            componentid, nrows, ncols);
+       }
+       /* static variant only for binary variables */
+       else if ( propdata->binvaraffected )
+@@ -6696,6 +6705,9 @@ SCIP_RETCODE handleDoublelLexMatrix(
+       SCIP_CALL( ensureDynamicConsArrayAllocatedAndSufficientlyLarge(scip, &propdata->genorbconss,
+             &propdata->genorbconsssize, propdata->ngenorbconss + nrowblocks + ncolblocks) );
+ 
++      printf("SYMMETRY component %d doublelex columnblocks %d rowblocks %d colsizes",
++         id, ncolblocks, nrowblocks);
++
+       /* handle column symmetries via original column and row ordering */
+       for (p = 0; p < ncolblocks; ++p)
+       {
+@@ -6705,7 +6717,11 @@ SCIP_RETCODE handleDoublelLexMatrix(
+          /* we can only handle the orbitope if all variables in a row have the same domain center */
+          if ( ! isEquallyCenteredOrbitope(scip, propdata->permvardomaincenter, varidxmatrix, 0, nrows,
+                colsbegin[p], colsbegin[p + 1], TRUE) )
++         {
++            printf(" %d", -1);
+             continue;
++         }
++         printf(" %d", colsbegin[p + 1] - colsbegin[p]);
+ 
+          /* create the orbitope matrix */
+          for (i = 0; i < nrows; ++i)
+@@ -6722,6 +6738,7 @@ SCIP_RETCODE handleDoublelLexMatrix(
+       }
+ 
+       /* handle row symmetries via original column and row ordering */
++      printf(" rowsizes");
+       for (p = 0; p < nrowblocks; ++p)
+       {
+          int ii;
+@@ -6729,7 +6746,11 @@ SCIP_RETCODE handleDoublelLexMatrix(
+          /* we can only handle the orbitope if all variables in a row have the same domain center */
+          if ( ! isEquallyCenteredOrbitope(scip, propdata->permvardomaincenter, varidxmatrix,
+                rowsbegin[p], rowsbegin[p + 1], 0, ncols, FALSE) )
++         {
++            printf(" %d", -1);
+             continue;
++         }
++         printf(" %d", rowsbegin[p + 1] - rowsbegin[p]);
+ 
+          /* create the orbitope matrix */
+          for (i = 0, ii = rowsbegin[p]; ii < rowsbegin[p + 1]; ++i, ++ii)
+@@ -6744,6 +6765,7 @@ SCIP_RETCODE handleDoublelLexMatrix(
+                &tmpsuccess, allowchgbds, nchgbds) );
+          *success = *success || tmpsuccess;
+       }
++      printf("\n");
+    }
+ 
+    SCIPfreeBufferArray(scip, &consvals);
+@@ -6916,6 +6938,8 @@ SCIP_RETCODE tryHandleSingleOrDoubleLexMatricesComponent(
+ 
+                SCIP_CALL( handleOrbitope(scip, propdata, cidx, orbitopematrix, nrows, ncols, partialname,
+                      TRUE, TRUE, &success, allowchgbds, nchgbds) );
++               printf("SYMMETRY component %d signedorbitope rows %d columns %d\n",
++                  cidx, nrows, ncols);
+ 
+                for (i = nrows - 1; i >= 0; --i)
+                {
+@@ -6931,6 +6955,8 @@ SCIP_RETCODE tryHandleSingleOrDoubleLexMatricesComponent(
+          {
+             SCIP_CALL( handleOrbitope(scip, propdata, cidx, lexmatrix, nrows, ncols, partialname,
+                   FALSE, FALSE, &success, allowchgbds, nchgbds) );
++            printf("SYMMETRY component %d orbitope dynamic rows %d columns %d\n",
++               cidx, nrows, ncols);
+          }
+       }
+       else
